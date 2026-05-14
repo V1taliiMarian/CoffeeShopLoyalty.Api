@@ -10,13 +10,21 @@
             background-color: #f8f9fa;
         }
 
+        /* Десктопна бокова панель */
         .sidebar {
             height: 100vh;
             width: 250px;
             position: fixed;
             background: #343a40;
             padding-top: 20px;
+            z-index: 1000;
         }
+
+            .sidebar h4 {
+                color: #fff;
+                text-align: center;
+                margin-bottom: 20px;
+            }
 
             .sidebar a {
                 color: #fff;
@@ -66,7 +74,7 @@
         }
 
         .news-img {
-            width: 120px;
+            width: 100px;
             height: 60px;
             object-fit: cover;
             border-radius: 8px;
@@ -78,13 +86,75 @@
             object-fit: cover;
             border-radius: 8px;
         }
+
+        /* АДАПТИВНІСТЬ ДЛЯ МОБІЛЬНИХ ПРИСТРОЇВ */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: sticky;
+                top: 0;
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-top: 5px;
+                padding-bottom: 5px;
+                white-space: nowrap;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+
+                .sidebar::-webkit-scrollbar {
+                    height: 4px;
+                }
+
+                .sidebar::-webkit-scrollbar-thumb {
+                    background: #6c757d;
+                    border-radius: 4px;
+                }
+
+                .sidebar h4 {
+                    display: none;
+                }
+                /* Ховаємо заголовок на мобільному для економії місця */
+
+                .sidebar a {
+                    display: inline-block;
+                    padding: 10px 15px;
+                    border-left: none;
+                    border-bottom: 4px solid transparent;
+                }
+
+                    .sidebar a:hover, .sidebar a.active {
+                        border-left: none;
+                        border-bottom: 4px solid #ffc107;
+                    }
+
+                .sidebar .mt-5 {
+                    margin-top: 0 !important;
+                }
+            /* Прибираємо великий відступ для кнопки Вихід */
+
+            .content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            #login-container .card {
+                width: 90% !important;
+                max-width: 320px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div id="login-container" style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
         <div class="card p-4 shadow-sm" style="width: 320px;">
-            <h4 class="text-center mb-4">☕ Roast Point</h4>
+            <h4 class="text-center mb-4">☕ Roast Point Admin</h4>
             <input type="password" id="admin-password" class="form-control mb-3" placeholder="Пароль адміністратора">
             <button class="btn btn-primary w-100" onclick="login()">Увійти</button>
             <div id="login-error" class="text-danger mt-2 text-center fw-bold" style="display:none; font-size:14px;">Невірний пароль!</div>
@@ -93,76 +163,84 @@
 
     <div id="app-container" style="display: none;">
         <div class="sidebar">
-            <h4 class="text-white text-center mb-4">Roast Point ☕</h4>
+            <h4>Roast Point ☕</h4>
             <a href="#" class="nav-link active" onclick="switchTab('menu', this)">📦 Меню</a>
-            <a href="#" class="nav-link" onclick="switchTab('promos', this)">🎁 Акції (1+1=3)</a>
+            <a href="#" class="nav-link" onclick="switchTab('promos', this)">🎁 Акції</a>
             <a href="#" class="nav-link" onclick="switchTab('news', this)">📰 Новини</a>
-            <a href="#" class="nav-link" onclick="switchTab('broadcast', this)">📢 Розсилка (Telegram)</a>
+            <a href="#" class="nav-link" onclick="switchTab('broadcast', this)">📢 Розсилка</a>
             <a href="#" class="nav-link" onclick="switchTab('orders', this)">🛒 Замовлення</a>
-            <a href="#" class="nav-link" onclick="switchTab('customers', this)">👥 База клієнтів</a>
-            <a href="#" class="nav-link text-danger mt-5" onclick="logout()">Вихід 🚪</a>
+            <a href="#" class="nav-link" onclick="switchTab('customers', this)">👥 Клієнти</a>
+            <a href="#" class="nav-link text-danger mt-5" onclick="logout()">🚪 Вихід</a>
         </div>
 
         <div class="content">
             <div id="tab-menu" class="section-panel active">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Керування меню</h2>
-                    <button class="btn btn-primary" onclick="openProductModal()">+ Додати позицію</button>
+                    <h2>Меню</h2>
+                    <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Додати</button>
                 </div>
                 <div id="menu-container">Оновлення...</div>
             </div>
 
             <div id="tab-promos" class="section-panel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Керування Акціями</h2>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#promoModal">+ Додати акцію</button>
+                    <h2>Акції</h2>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#promoModal">+ Додати</button>
                 </div>
-                <div class="alert alert-info">Акції автоматично перераховують кошик клієнта. "1+1=3" дає кожен 3-й товар в категорії безкоштовно.</div>
-                <table class="table table-hover bg-white shadow-sm rounded">
-                    <thead class="table-dark"><tr><th>Назва</th><th>Тип</th><th>Категорія</th><th>Знижка</th><th>Статус</th><th>Дії</th></tr></thead>
-                    <tbody id="promos-list"></tbody>
-                </table>
+                <div class="alert alert-info">"1+1=3" дає кожен 3-й товар в категорії безкоштовно.</div>
+                <div class="table-responsive">
+                    <table class="table table-hover bg-white shadow-sm rounded align-middle">
+                        <thead class="table-dark"><tr><th>Назва</th><th>Тип</th><th>Кат.</th><th>Знижка</th><th>Статус</th><th>Дії</th></tr></thead>
+                        <tbody id="promos-list"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="tab-news" class="section-panel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2>Новини</h2>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewsModal">+ Додати новину</button>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addNewsModal">+ Додати</button>
                 </div>
-                <div class="alert alert-warning">Увага! При додаванні новини вона АВТОМАТИЧНО відправляється всім клієнтам у Telegram.</div>
-                <table class="table table-hover bg-white shadow-sm rounded">
-                    <thead class="table-dark"><tr><th>Банер</th><th>Текст новини</th><th>Дії</th></tr></thead>
-                    <tbody id="news-list"></tbody>
-                </table>
+                <div class="alert alert-warning">Додана новина АВТОМАТИЧНО відправляється всім клієнтам у Telegram.</div>
+                <div class="table-responsive">
+                    <table class="table table-hover bg-white shadow-sm rounded align-middle">
+                        <thead class="table-dark"><tr><th>Банер</th><th>Текст новини</th><th>Дії</th></tr></thead>
+                        <tbody id="news-list"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="tab-broadcast" class="section-panel">
-                <h2>📢 Розсилка повідомлень</h2>
-                <div class="card p-4 mt-3 shadow-sm border-0">
-                    <p class="text-muted">Відправити текстове повідомлення всім клієнтам у бота.</p>
-                    <textarea id="broadcast-text" class="form-control mb-3" rows="4" placeholder="Введіть текст повідомлення..."></textarea>
-                    <button class="btn btn-success btn-lg" id="btn-broadcast" onclick="sendBroadcast()">Відправити всім</button>
+                <h2>📢 Розсилка</h2>
+                <div class="card p-3 mt-3 shadow-sm border-0">
+                    <p class="text-muted small">Відправити повідомлення всім клієнтам у бота.</p>
+                    <textarea id="broadcast-text" class="form-control mb-3" rows="4" placeholder="Текст повідомлення..."></textarea>
+                    <button class="btn btn-success" id="btn-broadcast" onclick="sendBroadcast()">Відправити всім</button>
                 </div>
             </div>
 
             <div id="tab-orders" class="section-panel">
-                <h2>Останні замовлення</h2>
+                <h2>Замовлення</h2>
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                     <li class="nav-item"><button class="nav-link active" onclick="filterOrders('active')">Активні</button></li>
-                    <li class="nav-item"><button class="nav-link" onclick="filterOrders('archived')">Архів (Завершені)</button></li>
+                    <li class="nav-item"><button class="nav-link" onclick="filterOrders('archived')">Архів</button></li>
                 </ul>
-                <table class="table table-hover bg-white shadow-sm rounded">
-                    <thead class="table-dark"><tr><th>№</th><th>Клієнт</th><th>Товари</th><th>Сума</th><th>Спосіб</th><th>Статус</th><th>Час</th></tr></thead>
-                    <tbody id="orders-list"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-hover bg-white shadow-sm rounded align-middle text-nowrap">
+                        <thead class="table-dark"><tr><th>№</th><th>Клієнт</th><th>Товари</th><th>Сума</th><th>Спосіб</th><th>Статус</th><th>Час</th></tr></thead>
+                        <tbody id="orders-list"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="tab-customers" class="section-panel">
-                <h2>База клієнтів</h2>
-                <table class="table table-hover bg-white shadow-sm rounded">
-                    <thead class="table-dark"><tr><th>ID</th><th>Ім'я</th><th>Телефон</th><th>Бонуси</th><th>Реф. код</th></tr></thead>
-                    <tbody id="customers-list"></tbody>
-                </table>
+                <h2>Клієнти</h2>
+                <div class="table-responsive">
+                    <table class="table table-hover bg-white shadow-sm rounded align-middle text-nowrap">
+                        <thead class="table-dark"><tr><th>ID</th><th>Ім'я</th><th>Телефон</th><th>Бонуси</th><th>Реф. код</th></tr></thead>
+                        <tbody id="customers-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -231,7 +309,7 @@
                     <div class="modal-header"><h5 class="modal-title">Створити акцію</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body">
                         <form id="promoForm">
-                            <div class="mb-3"><label>Назва акції (внутрішня)</label><input type="text" class="form-control" id="promo-name" required></div>
+                            <div class="mb-3"><label>Назва акції</label><input type="text" class="form-control" id="promo-name" required></div>
                             <div class="mb-3">
                                 <label>Тип акції</label>
                                 <select class="form-select" id="promo-type">
@@ -241,7 +319,7 @@
                             </div>
                             <div class="mb-3" id="promo-discount-block" style="display:none;"><label>Відсоток знижки</label><input type="number" class="form-control" id="promo-discount" value="0"></div>
                             <div class="mb-3">
-                                <label>Категорія товарів (Пусто = всі товари)</label>
+                                <label>Категорія (Пусто = всі товари)</label>
                                 <select class="form-select" id="promo-cat">
                                     <option value="">-- Всі категорії --</option>
                                     <option value="1">Кава та чай</option>
@@ -264,9 +342,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let allOrders = [];
-        let allMenuItems = []; // Глобальна змінна для редагування товарів
+        let allMenuItems = [];
 
-        // АВТОРИЗАЦІЯ
         async function checkAuth() {
             try {
                 const res = await fetch('/api/Auth/Check');
@@ -316,6 +393,11 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             el.classList.add('active');
 
+            // Якщо ми на мобільному, прокручуємо горизонтальне меню так, щоб активна кнопка була по центру
+            if (window.innerWidth <= 768) {
+                el.scrollIntoView({ behavior: "smooth", inline: "center" });
+            }
+
             if (tabId === 'menu') loadMenu();
             if (tabId === 'news') loadNews();
             if (tabId === 'promos') loadPromos();
@@ -323,8 +405,7 @@
             if (tabId === 'customers') loadCustomers();
         }
 
-        // ================= МЕНЮ (ДОДАТИ / РЕДАГУВАТИ / ВИДАЛИТИ) =================
-
+        // ================= МЕНЮ =================
         async function loadMenu() {
             const res = await fetch('/api/MenuItems');
             allMenuItems = await res.json();
@@ -339,20 +420,20 @@
             }, {});
 
             for (const [category, prods] of Object.entries(grouped)) {
-                let html = `<div class="category-header">${category}</div><table class="table bg-white shadow-sm rounded mt-2 mb-4 align-middle"><tbody>`;
+                let html = `<div class="category-header">${category}</div><div class="table-responsive"><table class="table bg-white shadow-sm rounded mt-2 mb-4 align-middle text-nowrap"><tbody>`;
                 prods.forEach(p => {
                     let img = p.imageUrl ? `<img src="${p.imageUrl}" class="prod-img">` : `<div class="prod-img bg-secondary text-white d-flex align-items-center justify-content-center" style="font-size:10px">Немає</div>`;
                     html += `<tr>
-                            <td width="60">${img}</td>
-                            <td class="fw-bold">${p.name}</td>
-                            <td width="100"><span class="badge bg-success fs-6">${p.price} ₴</span></td>
-                            <td width="120" class="text-end">
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(${p.id})">✎</button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProd(${p.id})">✕</button>
-                            </td>
-                        </tr>`;
+                        <td width="60">${img}</td>
+                        <td class="fw-bold">${p.name}</td>
+                        <td width="100"><span class="badge bg-success fs-6">${p.price} ₴</span></td>
+                        <td width="100" class="text-end">
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(${p.id})">✎</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProd(${p.id})">✕</button>
+                        </td>
+                    </tr>`;
                 });
-                html += `</tbody></table>`;
+                html += `</tbody></table></div>`;
                 container.innerHTML += html;
             }
         }
@@ -401,24 +482,20 @@
             formData.append('costPrice', document.getElementById('prod-cost').value || 0);
             formData.append('weightOrVolume', document.getElementById('prod-weight').value);
             formData.append('description', document.getElementById('prod-desc').value);
-
             formData.append('containsGluten', document.getElementById('prod-gluten').checked);
             formData.append('containsLactose', document.getElementById('prod-lactose').checked);
             formData.append('isSpicy', document.getElementById('prod-spicy').checked);
             formData.append('isNew', document.getElementById('prod-new').checked);
 
             const imageFile = document.getElementById('prod-image').files[0];
-            if (imageFile) {
-                formData.append('imageFile', imageFile);
-            }
+            if (imageFile) formData.append('imageFile', imageFile);
 
             const url = id === "0" ? '/api/AdminDashboard/AddProduct' : `/api/AdminDashboard/UpdateProduct/${id}`;
             const method = id === "0" ? 'POST' : 'PUT';
 
             await fetch(url, { method: method, body: formData });
 
-            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-            if (modalInstance) modalInstance.hide();
+            bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
 
             document.getElementById('productForm').reset();
             btn.disabled = false;
@@ -439,7 +516,7 @@
             if (!res.ok) return checkAuth();
             const news = await res.json();
             const tbody = document.getElementById('news-list'); tbody.innerHTML = '';
-            news.forEach(n => { tbody.innerHTML += `<tr><td><img src="${n.imageUrl}" class="news-img"></td><td>${n.title}</td><td><button class="btn btn-sm btn-danger" onclick="deleteNews(${n.id})">Видалити</button></td></tr>`; });
+            news.forEach(n => { tbody.innerHTML += `<tr><td><img src="${n.imageUrl}" class="news-img"></td><td class="text-wrap">${n.title}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteNews(${n.id})">✕</button></td></tr>`; });
         }
 
         document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
@@ -450,9 +527,7 @@
             formData.append('imageFile', document.getElementById('news-image').files[0]);
             await fetch('/api/AdminDashboard/AddNews', { method: 'POST', body: formData });
 
-            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('addNewsModal'));
-            if (modalInstance) modalInstance.hide();
-
+            bootstrap.Modal.getInstance(document.getElementById('addNewsModal')).hide();
             document.getElementById('addNewsForm').reset();
             btn.disabled = false; btn.innerText = 'Опублікувати та Відправити всім';
             loadNews();
@@ -473,7 +548,7 @@
             items.forEach(p => {
                 let cat = p.categoryId ? p.categoryId : 'Всі';
                 let val = p.promoType === 'Discount' ? `${p.discountPercent}%` : '-';
-                tbody.innerHTML += `<tr><td>${p.name}</td><td><span class="badge bg-success">${p.promoType}</span></td><td>${cat}</td><td>${val}</td><td>${p.isActive ? 'Активна' : 'Вимкнено'}</td><td><button class="btn btn-sm btn-danger" onclick="deletePromo(${p.id})">Видалити</button></td></tr>`;
+                tbody.innerHTML += `<tr><td>${p.name}</td><td><span class="badge bg-success">${p.promoType}</span></td><td>${cat}</td><td>${val}</td><td>${p.isActive ? 'Активна' : 'Вимкнено'}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deletePromo(${p.id})">✕</button></td></tr>`;
             });
         }
 
@@ -489,9 +564,7 @@
             };
             await fetch('/api/AdminDashboard/AddPromotion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
 
-            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('promoModal'));
-            if (modalInstance) modalInstance.hide();
-
+            bootstrap.Modal.getInstance(document.getElementById('promoModal')).hide();
             loadPromos();
         });
 
@@ -499,7 +572,7 @@
             if (confirm("Видалити акцію?")) { await fetch('/api/AdminDashboard/DeletePromotion/' + id, { method: 'DELETE' }); loadPromos(); }
         }
 
-        // ================= РОЗСИЛКА (BROADCAST) =================
+        // ================= РОЗСИЛКА =================
         async function sendBroadcast() {
             const text = document.getElementById('broadcast-text').value;
             if (!text) return alert("Введіть текст");
