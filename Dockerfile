@@ -1,5 +1,4 @@
-# Використовуємо образ .NET 8 SDK для збірки (або 7, якщо використовуєте його)
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Копіюємо файл проекту та відновлюємо залежності
@@ -13,8 +12,7 @@ WORKDIR "/src/"
 # Публікуємо реліз
 RUN dotnet publish "CoffeeShopLoyalty.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Створюємо фінальний образ на основі легкого ASP.NET runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 

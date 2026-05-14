@@ -78,30 +78,10 @@
             object-fit: cover;
             border-radius: 8px;
         }
-
-        .admin-tag {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: bold;
-            color: white;
-            margin-right: 4px;
-            margin-top: 4px;
-        }
-
-        .bg-wheat {
-            background-color: #d4a373;
-        }
-
-        .bg-milk {
-            background-color: #a2d2ff;
-        }
     </style>
 </head>
 <body>
 
-    <!-- ЕКРАН ЛОГІНУ -->
     <div id="login-container" style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
         <div class="card p-4 shadow-sm" style="width: 320px;">
             <h4 class="text-center mb-4">☕ Roast Point</h4>
@@ -111,7 +91,6 @@
         </div>
     </div>
 
-    <!-- ГОЛОВНИЙ ДОДАТОК (ПРИХОВАНО ДО АВТОРИЗАЦІЇ) -->
     <div id="app-container" style="display: none;">
         <div class="sidebar">
             <h4 class="text-white text-center mb-4">Roast Point ☕</h4>
@@ -187,7 +166,6 @@
             </div>
         </div>
 
-        <!-- Модалки (ті ж самі, що були у вашому коді) -->
         <div class="modal fade" id="productModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -286,6 +264,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let allOrders = [];
+        let allMenuItems = []; // Глобальна змінна для редагування товарів
 
         // АВТОРИЗАЦІЯ
         async function checkAuth() {
@@ -294,7 +273,7 @@
                 if (res.ok) {
                     document.getElementById('login-container').style.display = 'none';
                     document.getElementById('app-container').style.display = 'block';
-                    loadMenu(); // Завантажуємо дані лише після успішного логіну
+                    loadMenu();
                 } else {
                     showLogin();
                 }
@@ -329,7 +308,6 @@
             window.location.reload();
         }
 
-        // Запуск перевірки при завантаженні сторінки
         checkAuth();
 
         function switchTab(tabId, el) {
@@ -345,26 +323,144 @@
             if (tabId === 'customers') loadCustomers();
         }
 
-        // Далі йдуть всі ваші функції (sendBroadcast, loadPromos, loadMenu, addProduct тощо) без змін
-        async function sendBroadcast() {
-            const text = document.getElementById('broadcast-text').value;
-            if (!text) return alert("Введіть текст");
-            const btn = document.getElementById('btn-broadcast');
-            btn.disabled = true; btn.innerText = "Розсилка...";
+        // ================= МЕНЮ (ДОДАТИ / РЕДАГУВАТИ / ВИДАЛИТИ) =================
 
-            const fd = new FormData(); fd.append("message", text);
-            const res = await fetch('/api/AdminDashboard/Broadcast', { method: 'POST', body: fd });
-            if (res.ok) {
-                const data = await res.json();
-                alert(`Успішно відправлено: ${data.sent} з ${data.total} клієнтів.`);
-                document.getElementById('broadcast-text').value = '';
-            } else {
-                alert("Помилка розсилки. Можливо, сесія закінчилась.");
-                checkAuth();
+        async function loadMenu() {
+            const res = await fetch('/api/MenuItems');
+            allMenuItems = await res.json();
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+
+            const grouped = allMenuItems.reduce((acc, item) => {
+                let cName = item.category ? item.category.name : 'Інше';
+                acc[cName] = acc[cName] || [];
+                acc[cName].push(item);
+                return acc;
+            }, {});
+
+            for (const [category, prods] of Object.entries(grouped)) {
+                let html = `<div class="category-header">${category}</div><table class="table bg-white shadow-sm rounded mt-2 mb-4 align-middle"><tbody>`;
+                prods.forEach(p => {
+                    let img = p.imageUrl ? `<img src="${p.imageUrl}" class="prod-img">` : `<div class="prod-img bg-secondary text-white d-flex align-items-center justify-content-center" style="font-size:10px">Немає</div>`;
+                    html += `<tr>
+                            <td width="60">${img}</td>
+                            <td class="fw-bold">${p.name}</td>
+                            <td width="100"><span class="badge bg-success fs-6">${p.price} ₴</span></td>
+                            <td width="120" class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(${p.id})">✎</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProd(${p.id})">✕</button>
+                            </td>
+                        </tr>`;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML += html;
             }
-            btn.disabled = false; btn.innerText = "Відправити всім";
         }
 
+        function openProductModal() {
+            document.getElementById('productForm').reset();
+            document.getElementById('prod-id').value = "0";
+            document.getElementById('prodModalTitle').innerText = "Додати товар";
+            var myModal = new bootstrap.Modal(document.getElementById('productModal'));
+            myModal.show();
+        }
+
+        function editProduct(id) {
+            const p = allMenuItems.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('prod-id').value = p.id;
+            document.getElementById('prod-name').value = p.name;
+            document.getElementById('prod-category').value = p.categoryId;
+            document.getElementById('prod-price').value = p.price;
+            document.getElementById('prod-cost').value = p.costPrice;
+            document.getElementById('prod-weight').value = p.weightOrVolume || '';
+            document.getElementById('prod-desc').value = p.description || '';
+
+            document.getElementById('prod-gluten').checked = p.containsGluten;
+            document.getElementById('prod-lactose').checked = p.containsLactose;
+            document.getElementById('prod-spicy').checked = p.isSpicy;
+            document.getElementById('prod-new').checked = p.isNew;
+
+            document.getElementById('prodModalTitle').innerText = "Редагувати товар";
+            var myModal = new bootstrap.Modal(document.getElementById('productModal'));
+            myModal.show();
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-prod');
+            btn.disabled = true;
+            btn.innerText = 'Збереження...';
+
+            const id = document.getElementById('prod-id').value;
+            const formData = new FormData();
+            formData.append('name', document.getElementById('prod-name').value);
+            formData.append('categoryId', document.getElementById('prod-category').value);
+            formData.append('price', document.getElementById('prod-price').value);
+            formData.append('costPrice', document.getElementById('prod-cost').value || 0);
+            formData.append('weightOrVolume', document.getElementById('prod-weight').value);
+            formData.append('description', document.getElementById('prod-desc').value);
+
+            formData.append('containsGluten', document.getElementById('prod-gluten').checked);
+            formData.append('containsLactose', document.getElementById('prod-lactose').checked);
+            formData.append('isSpicy', document.getElementById('prod-spicy').checked);
+            formData.append('isNew', document.getElementById('prod-new').checked);
+
+            const imageFile = document.getElementById('prod-image').files[0];
+            if (imageFile) {
+                formData.append('imageFile', imageFile);
+            }
+
+            const url = id === "0" ? '/api/AdminDashboard/AddProduct' : `/api/AdminDashboard/UpdateProduct/${id}`;
+            const method = id === "0" ? 'POST' : 'PUT';
+
+            await fetch(url, { method: method, body: formData });
+
+            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+            if (modalInstance) modalInstance.hide();
+
+            document.getElementById('productForm').reset();
+            btn.disabled = false;
+            btn.innerText = 'Зберегти';
+            loadMenu();
+        });
+
+        async function deleteProd(id) {
+            if (confirm('Видалити цей товар?')) {
+                await fetch('/api/AdminDashboard/DeleteProduct/' + id, { method: 'DELETE' });
+                loadMenu();
+            }
+        }
+
+        // ================= НОВИНИ =================
+        async function loadNews() {
+            const res = await fetch('/api/AdminDashboard/News');
+            if (!res.ok) return checkAuth();
+            const news = await res.json();
+            const tbody = document.getElementById('news-list'); tbody.innerHTML = '';
+            news.forEach(n => { tbody.innerHTML += `<tr><td><img src="${n.imageUrl}" class="news-img"></td><td>${n.title}</td><td><button class="btn btn-sm btn-danger" onclick="deleteNews(${n.id})">Видалити</button></td></tr>`; });
+        }
+
+        document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-news'); btn.disabled = true; btn.innerText = 'Відправка...';
+            const formData = new FormData();
+            formData.append('title', document.getElementById('news-title').value);
+            formData.append('imageFile', document.getElementById('news-image').files[0]);
+            await fetch('/api/AdminDashboard/AddNews', { method: 'POST', body: formData });
+
+            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('addNewsModal'));
+            if (modalInstance) modalInstance.hide();
+
+            document.getElementById('addNewsForm').reset();
+            btn.disabled = false; btn.innerText = 'Опублікувати та Відправити всім';
+            loadNews();
+        });
+
+        async function deleteNews(id) { if (confirm('Видалити?')) { await fetch('/api/AdminDashboard/DeleteNews/' + id, { method: 'DELETE' }); loadNews(); } }
+
+        // ================= АКЦІЇ =================
         document.getElementById('promo-type').addEventListener('change', (e) => {
             document.getElementById('promo-discount-block').style.display = e.target.value === 'Discount' ? 'block' : 'none';
         });
@@ -392,7 +488,10 @@
                 isActive: true
             };
             await fetch('/api/AdminDashboard/AddPromotion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            bootstrap.Modal.getInstance(document.getElementById('promoModal')).hide();
+
+            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('promoModal'));
+            if (modalInstance) modalInstance.hide();
+
             loadPromos();
         });
 
@@ -400,48 +499,27 @@
             if (confirm("Видалити акцію?")) { await fetch('/api/AdminDashboard/DeletePromotion/' + id, { method: 'DELETE' }); loadPromos(); }
         }
 
-        async function loadMenu() {
-            const res = await fetch('/api/MenuItems');
-            const items = await res.json();
-            const container = document.getElementById('menu-container');
-            container.innerHTML = '';
-            const grouped = items.reduce((acc, item) => { let cName = item.category ? item.category.name : 'Інше'; acc[cName] = acc[cName] || []; acc[cName].push(item); return acc; }, {});
-            for (const [category, prods] of Object.entries(grouped)) {
-                let html = `<div class="category-header">${category}</div><table class="table bg-white shadow-sm rounded mt-2 mb-4 align-middle"><tbody>`;
-                prods.forEach(p => {
-                    let img = p.imageUrl ? `<img src="${p.imageUrl}" class="prod-img">` : `<div class="prod-img bg-secondary text-white d-flex align-items-center justify-content-center" style="font-size:10px">Немає</div>`;
-                    html += `<tr><td width="60">${img}</td><td class="fw-bold">${p.name}</td><td width="100"><span class="badge bg-success fs-6">${p.price} ₴</span></td><td width="150"><button class="btn btn-sm btn-outline-danger" onclick="deleteProd(${p.id})">✕</button></td></tr>`;
-                });
-                html += `</tbody></table>`;
-                container.innerHTML += html;
+        // ================= РОЗСИЛКА (BROADCAST) =================
+        async function sendBroadcast() {
+            const text = document.getElementById('broadcast-text').value;
+            if (!text) return alert("Введіть текст");
+            const btn = document.getElementById('btn-broadcast');
+            btn.disabled = true; btn.innerText = "Розсилка...";
+
+            const fd = new FormData(); fd.append("message", text);
+            const res = await fetch('/api/AdminDashboard/Broadcast', { method: 'POST', body: fd });
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Успішно відправлено: ${data.sent} з ${data.total} клієнтів.`);
+                document.getElementById('broadcast-text').value = '';
+            } else {
+                alert("Помилка розсилки. Можливо, сесія закінчилась.");
+                checkAuth();
             }
+            btn.disabled = false; btn.innerText = "Відправити всім";
         }
 
-        async function deleteProd(id) { if (confirm('Видалити?')) { await fetch('/api/AdminDashboard/DeleteProduct/' + id, { method: 'DELETE' }); loadMenu(); } }
-
-        async function loadNews() {
-            const res = await fetch('/api/AdminDashboard/News');
-            if (!res.ok) return checkAuth();
-            const news = await res.json();
-            const tbody = document.getElementById('news-list'); tbody.innerHTML = '';
-            news.forEach(n => { tbody.innerHTML += `<tr><td><img src="${n.imageUrl}" class="news-img"></td><td>${n.title}</td><td><button class="btn btn-sm btn-danger" onclick="deleteNews(${n.id})">Видалити</button></td></tr>`; });
-        }
-
-        document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-save-news'); btn.disabled = true; btn.innerText = 'Відправка...';
-            const formData = new FormData();
-            formData.append('title', document.getElementById('news-title').value);
-            formData.append('imageFile', document.getElementById('news-image').files[0]);
-            await fetch('/api/AdminDashboard/AddNews', { method: 'POST', body: formData });
-            bootstrap.Modal.getInstance(document.getElementById('addNewsModal')).hide();
-            document.getElementById('addNewsForm').reset();
-            btn.disabled = false; btn.innerText = 'Опублікувати та Відправити всім';
-            loadNews();
-        });
-
-        async function deleteNews(id) { if (confirm('Видалити?')) { await fetch('/api/AdminDashboard/DeleteNews/' + id, { method: 'DELETE' }); loadNews(); } }
-
+        // ================= ЗАМОВЛЕННЯ ТА КЛІЄНТИ =================
         async function loadOrders() {
             const res = await fetch('/api/AdminDashboard/Orders');
             if (!res.ok) return checkAuth();
