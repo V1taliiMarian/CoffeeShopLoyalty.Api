@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Элементы решения/">
+    <File Path="Dockerfile.txt" />
+  </Folder>
+  <Project Path="CoffeeShopLoyalty.Api.csproj" />
+</Solution>
